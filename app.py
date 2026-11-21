@@ -71,7 +71,8 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-    st.caption("Powered by LangChain + FAISS")
+
+    st.caption("Powered by LangChain + Supabase")
 
 
 # 6. Display Previous Messages

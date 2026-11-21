@@ -1,38 +1,37 @@
+
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import SupabaseVectorStore
 
-# 1. Load The PDF
+from src.config import embeddings, supabase_client
 
-loader=PyPDFLoader("data/company_policy.pdf")
-documents=loader.load()
+# 1. Load the PDF
+loader = PyPDFLoader("data/company_policy.pdf")
+documents = loader.load()
 
+print(f"Total PDF pages loaded: {len(documents)}")
 
-# step 2: Split Text into Chunks 
-text_splitter=RecursiveCharacterTextSplitter(
+# 2. Split text into chunks
+text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=500,
     chunk_overlap=100
-    
 )
 
-chunks=text_splitter.split_documents(documents)
-print(len(chunks))
+chunks = text_splitter.split_documents(documents)
 
-# Step 3: Embeddings 
-embeddings=HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
+print(f"Total chunks created: {len(chunks)}")
+
+# 3. Connect to Supabase Vector Store
+vectorstore = SupabaseVectorStore(
+    client=supabase_client,
+    embedding=embeddings,
+    table_name="documents",
+    query_name="match_documents"
 )
 
+# 4. Insert chunks and embeddings into Supabase
+print("Starting ingestion to Supabase...")
 
-# Vectorstore DataBase
+vectorstore.add_documents(chunks)
 
-vectorstore=FAISS.from_documents(
-    chunks,
-    embeddings
-)
-
-# Save the vectorstore DB
-vectorstore.save_local("vectorstore")
-
-print("vector database save Sucessfully.")
+print("PDF data successfully stored in Supabase!")

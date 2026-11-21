@@ -1,52 +1,57 @@
+
 from langchain_core.output_parsers import StrOutputParser
-from src.config import llm 
-from src.prompts import(
+
+from src.config import llm
+
+from src.prompts import (
     intent_prompt,
     contextualize_prompt,
-    answer_prompt,  # Based on Document
+    answer_prompt,
     history_prompt,
     general_prompt
-      
 )
 
-# Intent classification chain 
 
-intent_chain=(
+# 1. Intent Classification Chain
+
+intent_chain = (
     intent_prompt
-    |llm
-    |StrOutputParser()   
+    | llm
+    | StrOutputParser()
 )
 
 
-# Rewriting Prompt chain 
-contextualize_chain=(
+# 2. Question Contextualization Chain
+
+contextualize_chain = (
     contextualize_prompt
-    |llm 
-    |StrOutputParser()
+    | llm
+    | StrOutputParser()
 )
 
-# Document answer chain 
-document_answer_chain=(
+
+# 3. Document Answer Chain
+
+document_answer_chain = (
     answer_prompt
-    |llm
-    |StrOutputParser()
+    | llm
+    | StrOutputParser()
 )
 
-# History Answer Chain 
 
-history_answer_chain=(
+# 4. History Answer Chain
+
+history_answer_chain = (
     history_prompt
-    |llm 
-    |StrOutputParser()
+    | llm
+    | StrOutputParser()
 )
 
 
-# General_chain=(
-general_chain=(
+# 5. General Conversation Chain
+
+general_chain = (
     general_prompt
-    |llm 
-    |StrOutputParser()
-    
+    | llm
+    | StrOutputParser()
 )
-
-

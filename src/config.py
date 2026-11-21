@@ -1,44 +1,69 @@
-import os       
+
+import os
+from dotenv import load_dotenv
+
+from supabase import create_client
 from langchain_groq import ChatGroq
-from dotenv import load_dotenv 
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS 
+from langchain_community.vectorstores import SupabaseVectorStore
 
 
-
-
-
-# Load environment variables 
-
+# Load environment variables
 load_dotenv()
 
-# Initial Embeddings 
-embeddings=HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-)
 
-# Load FAISS vector database 
+# 1. Initialize HuggingFace Embeddings
 
-vectorstore=FAISS.load_local(
-    "vectorstore",
-    embeddings,
-    allow_dangerous_deserialization=True
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
 
-# Create the Retriver 
+# 2. Get Supabase Credentials
 
-retriever=vectorstore.as_retriever(
-    search_kwargs={"k":3}
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("Supabase credentials are missing in .env")
+
+if not GROQ_API_KEY:
+    raise ValueError("Groq API key is missing in .env")
+
+
+# 3. Connect to Supabase
+
+supabase_client = create_client(
+    SUPABASE_URL,
+    SUPABASE_KEY
 )
 
 
+# 4. Initialize Supabase Vector Store
 
-# Initialize The LLM
+vectorstore = SupabaseVectorStore(
+    client=supabase_client,
+    embedding=embeddings,
+    table_name="documents",
+    query_name="match_documents"
+)
 
-llm=ChatGroq(
+
+# 5. Create Retriever
+
+retriever = vectorstore.as_retriever(
+    search_kwargs={"k": 3}
+)
+
+
+# 6. Initialize Groq LLM
+
+llm = ChatGroq(
     model="openai/gpt-oss-20b",
     temperature=0,
-    api_key=os.getenv("GROQ_API_KEY")
-    
+    api_key=GROQ_API_KEY
 )
+
+
+print("Supabase Vector Database connected successfully!")
